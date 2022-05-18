@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title class="zipPreviewText">Zip Preview</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="lib/zip.min.js"></script>
+    <script src="lib/zip/zip.min.js"></script>
     <script src="lib/jquery.i18n.js"></script>
     <script src="lib/jquery.i18n.messagestore.js"></script>
     <script src="lib/jquery.i18n.language.js"></script>
@@ -24,7 +24,7 @@
     <script>
 
 
-
+        let entries;
 
         readZip();
 
@@ -45,27 +45,28 @@
 
         // get all entries from the zip
         
-        const entries = await reader.getEntries();
+        entries = await reader.getEntries();
         if (entries.length) {
+            console.log(entries);
 
             const entryMap = {};
             entryMap['root'] = document.createElement('ul');
             entryMap['root'].setAttribute('id', 'tree');
-            document.getElementById('zipPreview').appendChild(entryMap['root']);
+            document.getElementById('zip-preview').appendChild(entryMap['root']);
             //console.log(entries);
 
-            entries.forEach(entry => {
+            entries.forEach(function(entry, index) {
 
                 let filename = entry.filename;
                 //remove slash at end of string if available
-                if(filename.endsWith('/')) {
-                    filename = filename.slice(0, filename.length-1);
+                if (filename.endsWith('/')) {
+                    filename = filename.slice(0, filename.length - 1);
                 }
 
                 //split into parts before and after last slash
                 const lastIndex = filename.lastIndexOf('/');
                 let before = 'root';
-                if(lastIndex != -1) {
+                if (lastIndex != -1) {
                     before = filename.slice(0, lastIndex + 1);
                 }
                 const after = filename.slice(lastIndex + 1);
@@ -73,21 +74,49 @@
                 //console.log(entry);
                 const humanReadableSize = " (" + fileSizeSI(entry.uncompressedSize) + ")";
                 const parentListNode = entryMap[before];
+
+                //options for jsTree
+                const jsTreeOptions = {};
+                jsTreeOptions['opened'] = true;
+                jsTreeOptions['disabled'] = true;
+                if (entry.directory) {
+                    jsTreeOptions['icon'] = 'glyphicon glyphicon-folder-open';
+                }
+                else {
+                    jsTreeOptions['icon'] = 'glyphicon glyphicon-file';
+                }
+
+
+                //create li element and set tree options and text
                 const listNode = document.createElement("li");
+                listNode.setAttribute('data-jstree', JSON.stringify(jsTreeOptions))
                 const textnode = document.createTextNode(after + (!entry.directory ? humanReadableSize : ""));
+
                 listNode.appendChild(textnode);
+
+                //Add li element to parent ul element
                 parentListNode.appendChild(listNode);
 
-                if(entry.directory) {
+                //Add new ul element, if entry is a directory
+                if (entry.directory) {
                     const ulNode = document.createElement('ul');
-                    parentListNode.appendChild(ulNode);
+                    listNode.appendChild(ulNode);
                     entryMap[entry.filename] = ulNode;
                 }
-                
+                else{
+                    const downloadLink = $('<a href="#" data-entry-index="' + index + '">Download<a>');
+                    downloadLink.click(downloadFile);
+                    $(listNode).append(downloadLink);
+                    
+
+                }
+
 
 
 
             });
+        }
+
 
             
 
@@ -115,8 +144,73 @@
         // close the ZipReader
             await reader.close();
 
-        }
+        
     }
+
+    async function downloadFile(event) {
+        console.log('Download clicked');
+			const target = event.target;
+			let href = target.getAttribute("href");
+			if (target.dataset.entryIndex !== undefined && !target.download) {
+                console.log('inside');
+				target.removeAttribute("href");
+				event.preventDefault();
+				try {
+					await download(entries[Number(target.dataset.entryIndex)], target.parentElement, target);
+					href = target.getAttribute("href");
+				} catch (error) {
+					alert(error);
+				}
+				target.setAttribute("href", href);
+			}
+	}
+
+    async function download(entry, li, a) {
+			if (!li.classList.contains("busy")) {
+				const unzipProgress = document.createElement("progress");
+				li.appendChild(unzipProgress);
+				const controller = new AbortController();
+				const signal = controller.signal;
+				const abortButton = document.createElement("button");
+				abortButton.onclick = () => controller.abort();
+				abortButton.textContent = "✖";
+				abortButton.title = "Abort";
+				li.appendChild(abortButton);
+				li.classList.add("busy");
+				try {
+                    const blobURL = URL.createObjectURL(await entry.getData(new zip.BlobWriter(), {
+						//password: passwordInput.value,
+						onprogress: (index, max) => {
+							unzipProgress.value = index;
+							unzipProgress.max = max;
+						},
+						signal}))
+                        /*
+					const blobURL = await model.getURL(entry, {
+						password: passwordInput.value,
+						onprogress: (index, max) => {
+							unzipProgress.value = index;
+							unzipProgress.max = max;
+						},
+						signal
+					});
+                    */
+					a.href = blobURL;
+					a.download = entry.filename;
+					const clickEvent = new MouseEvent("click");
+					a.dispatchEvent(clickEvent);
+				} catch (error) {
+					if (error.message != zip.ERR_ABORT) {
+						throw error;
+					}
+				} finally {
+					li.classList.remove("busy");
+					unzipProgress.remove();
+					abortButton.remove();
+				}
+			}
+		}
+
 
     function fileSizeSI(a,b,c,d,e){
         return (b=Math,c=b.log,d=1000,e=c(a)/c(d)|0,a/b.pow(d,e)).toFixed(2)
@@ -135,8 +229,8 @@
         <h1 class="page-title zipPreviewText">Zip Preview</h1>
         <div class='preview-container'>
             <div class='preview-header'></div>
-            <div id="zipPreview" class='preview'>
-                <img src=""
+            <div id="zip-preview" class='preview'>
+
             </div>
         </div>
     </main>
