@@ -34,15 +34,7 @@ async function readZip(fileUrl) {
         if (entries.length) {
 
             const entryMap = {};
-            //const rootList = $('<ul>');
             const entryList = [];
-            //rootList.attr('id','tree');
-            //$('#zip-preview').append(rootList);
-
-            //entryMap['root'] = rootList.get(0);
-            //entryMap['root'].setAttribute('id', 'tree');
-            //document.getElementById('zip-preview').appendChild(entryMap['root']);
-            //console.log(entries);
 
             entries.forEach(function(entry, index) {
 
@@ -60,19 +52,25 @@ async function readZip(fileUrl) {
                 if (lastIndex != -1) {
                     before = filename.slice(0, lastIndex + 1);
                 }
+
+                //the filename without directories
                 const after = filename.slice(lastIndex + 1);
-                //console.log(entry.filename + "   Before: " + before + "   After: " + after);
-                //console.log(entry);
+                //add the pure filename to the entry to be set in the donwload-link later
                 entry.filenameOnly = after;
+
                 const humanReadableSize = fileSizeSI(entry.uncompressedSize);
                 const parentListNode = entryMap[before];
 
+                //fancytree settings
                 treeObject.title = after;
-                treeObject.size = humanReadableSize;
                 treeObject.folder = entry.directory;
-                treeObject.index = index;
                 treeObject.unselectable = true;
+
+                //Additional settings to read out
+                treeObject.index = index;
+                treeObject.size = humanReadableSize;
                 treeObject.encrypted = entry.encrypted;
+                treeObject.filename = entry.filename;
 
                 if(entry.directory) {
                     treeObject.expanded=true;
@@ -90,70 +88,6 @@ async function readZip(fileUrl) {
                     entryList.push(treeObject);
                 }
 
-                //options for jsTree
-                /*
-                const jsTreeOptions = {};
-                jsTreeOptions['opened'] = true;
-                jsTreeOptions['disabled'] = true;
-                if (entry.directory) {
-                    jsTreeOptions['icon'] = 'glyphicon glyphicon-folder-open';
-                }
-                else {
-                    jsTreeOptions['icon'] = 'glyphicon glyphicon-file';
-                }
-                */
-
-
-                /*
-                //create li element and set tree options and text
-                const displayFileName = after + (!entry.directory ? humanReadableSize : "");
-                
-                const listNode = $('<li>');
-                //listNode.attr('data-jstree', JSON.stringify(jsTreeOptions)).append('<span>')
-                const textNode = $('<span>');
-                if(index%2 == 0) {
-                    //textNode.addClass('stripe');
-                }
-                
-                textNode.append(displayFileName);
-
-                const iconNode = $('<span>').addClass('glyphicon');
-                listNode.append(iconNode);
-                listNode.append(textNode);
-                
-                //const listNode = document.createElement("li");
-                //listNode.setAttribute('data-jstree', JSON.stringify(jsTreeOptions))
-
-                //const textnode = document.createTextNode(displayFileName);
-                //listNode.appendChild(textnode);
-
-                //Add li element to parent ul element
-                parentListNode.appendChild(listNode.get(0));
-
-                //Add new ul element, if entry is a directory
-                if (entry.directory) {
-                    //const ulNode = document.createElement('ul');
-                    const ulNode = $('<ul>');
-                    ulNode.addClass('nested active');
-                    //textNode.addClass('treeCaret treeCaret-down')
-                    iconNode.addClass('icon icon-folder glyphicon-folder-open');
-                    listNode.append(ulNode)
-
-                    entryMap[entry.filename] = ulNode.get(0);
-                }
-                else{
-                    const downloadLink = $('<a href="#" data-entry-index="' + index + '"><span class="icon glyphicon glyphicon-download"></span><a>');
-                    downloadLink.click(downloadFile);
-                    $(listNode).append(downloadLink);
-
-                    iconNode.addClass('icon icon-file glyphicon-file');
-                    
-
-                }
-
-
-            */
-
             });
 
             // close the ZipReader
@@ -161,15 +95,7 @@ async function readZip(fileUrl) {
 
             createTree(entryList);
 
-            /*
-            //create a tree using jsTree
-            $('#zip-preview').jstree({
-                core: {
-                    expand_selected_onload: true,
-                    "themes": { "stripes": true },
-                }
-            });
-            */
+         
         }
     }
     catch (err) {
@@ -227,7 +153,9 @@ async function download(entry, li, a) {
         try {
             const blobURL = URL.createObjectURL(await entry.getData(new zip.BlobWriter(), {
                 onprogress: (index, max) => {
+                    
                     const percent = Math.round(index/max*100);
+                    console.log(index + "   " + max  + "   " + percent);
                     setProgressBarValue(percent);
                     
                 },
@@ -260,22 +188,23 @@ async function createTree(dataStructure) {
     $("#treegrid").fancytree({
         extensions: ["table", "glyph"],
         checkbox: false,
-        unselectable: true,
         table: {
           indentation: 20,      // indent 20px per node level
-          nodeColumnIdx: 0,     // render the node title into the 2nd column
-          //checkboxColumnIdx: 0  // render the checkboxes into the 1st column
+          nodeColumnIdx: 0,     // render the node title into the 1st column
         },
         source: dataStructure,
+
         tooltip: function(event, data){
-          return data.node.data.author;
+          return data.node.data.filename;
         },
         glyph: {
             // The preset defines defaults for all supported icon types.
             preset: "bootstrap3",
         },
-        activate: function(event, data) {
+        beforeActivate: function(event, data){
+            //Prevent activation for every node
             return false;
+            
           },
     
     
@@ -283,50 +212,23 @@ async function createTree(dataStructure) {
           
             var node = data.node,
             $tdList = $(node.tr).find(">td");
-  
+            
+            // (index #0 is rendered by fancytree by adding the title)
             if(!node.folder) {
                 $tdList.eq(1).text(node.data.size);
 
                 if(!node.data.encrypted) {
                 const downloadLink = $('<a href="#" data-entry-index="' + node.data.index + '">');
                 downloadLink.click(downloadFile);
-                downloadLink.append('<span class="icon glyphicon glyphicon-download"></span>');
+                downloadLink.append('<span class="icon glyphicon glyphicon-download-alt"></span>');
                 
                 $tdList.eq(2).html(downloadLink);
                 }
             }
-          // (index #0 is rendered by fancytree by adding the checkbox)
-          //$tdList.eq(1).text(node.getIndexHier());
-          // (index #2 is rendered by fancytree)
-          //$tdList.eq(3).text(node.data.qty);
-          // Rendered by row template:
-  //        $tdList.eq(4).html("<input type='checkbox' name='like' value='" + node.key + "'>");
+
         }
       });
-  
     
-    /*
-    var toggler = document.getElementsByClassName("icon-folder");
-    var i;
-
-    for (i = 0; i < toggler.length; i++) {
-    toggler[i].addEventListener("click", function() {
-        if(this.classList.contains("glyphicon-folder-open")) {
-            this.classList.remove("glyphicon-folder-open");
-            this.classList.add("glyphicon-folder-close");
-        }
-        else {
-            this.classList.remove("glyphicon-folder-close");
-            this.classList.add("glyphicon-folder-open");
-        }
-        
-        this.parentElement.querySelector(".nested").classList.toggle("active");
-        this.classList.toggle("treeCaret-down");
-    });
-    
-    
-    }
-    */
     
 
 } 
