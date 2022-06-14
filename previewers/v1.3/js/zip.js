@@ -102,6 +102,7 @@ async function readZip(fileUrl) {
         //Display error message
         const errorMsg = document.createTextNode("Zip file structure could not be read (" + err + "). You can still download the zip file.");
         document.getElementById('zip-preview').appendChild(errorMsg);
+        console.log(err);
 
     }
     finally {

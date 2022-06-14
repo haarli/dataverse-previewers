@@ -4,11 +4,17 @@
     <meta charset="utf-8">
     <title class="zipPreviewText">Zip Preview</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
-    <script src="lib/zip/zip.min.js"></script>
-    <script src="lib/fancytree/jquery.fancytree-all-deps.min.js"></script>
-    <script src="lib/fancytree/modules/jquery.fancytree.table.js"></script>
-    <script src="lib/fancytree/modules/jquery.fancytree.glyph.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@3.4.1/dist/js/bootstrap.min.js" 
+        integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@zip.js/zip.js@2.4.15/dist/zip.min.js" 
+        integrity="sha256-5Nl32CWC7OjpPlC1WLOOmpTCFqYvF9xd47ASyc6piaA=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.fancytree@2.38.1/dist/jquery.fancytree-all-deps.min.js"
+        integrity="sha256-xDmafpv2lpjQOfcPY5h1L6WHfxr85D+KOXsvK00LZXI=" crossorigin="anonymous"></script> 
+    <script src="https://cdn.jsdelivr.net/npm/jquery.fancytree@2.38.1/dist/modules/jquery.fancytree.table.js" 
+        integrity="sha256-AQuGQyrn0FD1LyGJpz0VYqNpj9HNVBjtT/+4tIEkA6E=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery.fancytree@2.38.1/dist/modules/jquery.fancytree.glyph.js" 
+        integrity="sha256-yAOIsBFsXDyZEJb8RNPD4oFbby983wZ60XaGm3i+pxY=" crossorigin="anonymous"></script>
+
     <script type="text/javascript" src="js/xss.js"></script>
     <script type="text/javascript" src="js/zip.js"></script>
     <script src="lib/jquery.i18n.js"></script>
@@ -22,7 +28,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap-theme.min.css"
         integrity="sha384-6pzBo3FDv/PJ8r2KRkGHifhEocL+1X2rVCTTkUfGk7/0pbek5mMa1upzvWbrUbOZ" crossorigin="anonymous">
 
-    <link type="text/css" rel="stylesheet" href="lib/fancytree/skin-bootstrap-n/ui.fancytree.min.css" />    
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.fancytree@2.38.1/dist/skin-bootstrap-n/ui.fancytree.min.css" 
+        integrity="sha256-j1K2dTzrtUddJ5Rzflbn5ucx5g7lAxErYOzLhxaKYIY=" crossorigin="anonymous">  
 
     <link type="text/css" rel="stylesheet" href="css/preview.css" />
 
@@ -64,7 +72,7 @@
                 To download the complete zip file, please use the <b>Access File</b> button above.
             </div>
             <div id='zip-preview' class='preview'>
-                <img id="throbber" src="lib/zip/three-dots.svg" style="display:block; margin: auto; width: 15%;" />
+                <img id="throbber" src="images/three-dots.svg" style="display:block; margin: auto; width: 15%;" />
 
                 <!-- Add a <table> element where the tree should appear: -->
                 <table id="treegrid">
