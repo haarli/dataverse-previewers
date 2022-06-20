@@ -1,0 +1,15 @@
+on: 
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send repo to Dataverse 
+        uses: IQSS/dataverse-uploader@v1.2
+        with:
+          DATAVERSE_TOKEN: ${{secrets.DATAVERSE_TOKEN}}
+          DATAVERSE_SERVER: https://edmond.mpdl.mpg.de
+          DATAVERSE_DATASET_DOI: doi:10.17617/3.TF31SS
+          PUBLISH: False
